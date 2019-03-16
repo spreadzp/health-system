@@ -49,6 +49,11 @@ function createWindow() {
         // event.sender.send('asynchronous-reply', results);
       })
 
+      ipcMain.on('get-keys-for-rekey', (event, arg) => {
+        console.log(arg) // prints "ping"
+        callPythonFile(arg, "!!!!", 'response-keys', event);
+        // event.sender.send('asynchronous-reply', results);
+      })
       ipcMain.on('create-enc-capsule', (event, publicBobKey) => {
         console.log(publicBobKey) // prints "ping"
         event.sender.send('asynchronous-reply', publicBobKey);

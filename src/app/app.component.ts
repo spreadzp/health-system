@@ -21,10 +21,10 @@ export class AppComponent {
       console.log('NodeJS childProcess', electronService.childProcess);
       console.log(electronService.ipcRenderer.sendSync('synchronous-message', 'ping')) // prints "pong"
 
-      electronService.ipcRenderer.on('asynchronous-reply', (event, arg) => {
+      /* electronService.ipcRenderer.on('asynchronous-reply', (event, arg) => {
         console.log(arg) // prints "pong"
       })
-      electronService.ipcRenderer.send('asynchronous-message', 'ping')
+      electronService.ipcRenderer.send('asynchronous-message', 'ping') */
     } else {
       console.log('Mode web');
     }

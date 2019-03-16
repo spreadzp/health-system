@@ -1,6 +1,6 @@
 #1
 # Sets a default curve (secp256k1)
-import random, io
+import random, io, json, shelve, base64
 from pprint import pprint
 from umbral import pre, keys, config, signing
 from PIL import Image
@@ -38,13 +38,6 @@ alices_public_key = alices_private_key.get_pubkey()
 alices_signing_key = keys.UmbralPrivateKey.gen_key()
 alices_verifying_key = alices_signing_key.get_pubkey()
 alices_signer = signing.Signer(private_key=alices_signing_key)
-pprint(alices_private_key)
-print(alices_public_key)
-pprint(alices_signing_key)
-print(alices_verifying_key)
-pprint(alices_signer) 
-print("--------") 
-
 #3
 # Encrypt some data for Alice
 # ---------------------------
@@ -58,11 +51,7 @@ with open("python/proxy/23.jpg", "rb") as imageFile:
 
 # plaintext = b'Proxy Re-encryption is cool!' 
 # print(plaintext)
-ciphertext, capsule = pre.encrypt(alices_public_key, plaintext)
-print(capsule)
-print("#####")
-print(ciphertext)
-
+ciphertext, capsule = pre.encrypt(alices_public_key, plaintext) 
 
 #4
 # Decrypt data for Alice
@@ -88,20 +77,8 @@ bobs_public_key = bobs_private_key.get_pubkey()
 #6
 # Bob receives a capsule through a side channel (s3, ipfs, Google cloud, etc)
 bob_capsule = capsule
-print("Bob")
-print(bobs_private_key)
-print(bobs_public_key)
-print(bob_capsule)
 
-#7
-# Attempt Bob's decryption (fail)
-try:
-    fail_decrypted_data = pre.decrypt(ciphertext=ciphertext,
-                                      capsule=bob_capsule,
-                                      decrypting_key=bobs_private_key)
-except:
-    print("Decryption failed! Bob doesn't has access granted yet.")
-
+ 
 #8
 # Alice grants access to Bob by generating kfrags 
 # -----------------------------------------------
@@ -116,10 +93,7 @@ kfrags = pre.generate_kfrags(delegating_privkey=alices_private_key,
                              receiving_pubkey=bobs_public_key,
                              threshold=10,
                              N=20)
-
-print(" Alice grants access to Bob by generating kfrags")
-print(kfrags)                                
-
+ 
 #9
 # Ursulas perform re-encryption
 # ------------------------------
@@ -133,40 +107,35 @@ import random
 
 kfrags = random.sample(kfrags,  # All kfrags from above
                        10)      # M - Threshold
-print(" random `kfrags`") 
-print(kfrags) 
+
 # Bob collects the resulting `cfrags` from several Ursulas. 
 # Bob must gather at least `threshold` `cfrags` in order to activate the capsule.
 
 bob_capsule.set_correctness_keys(delegating=alices_public_key,
                                  receiving=bobs_public_key,
                                  verifying=alices_verifying_key)
+# print("kfrags:", f'{kfrags}')
+# for line in sys.stdin:
+# dict = [{'delegating': alices_public_key},{'receiving': bobs_public_key},{'verifying': alices_verifying_key}]
+alic_pub_byte = io.BytesIO(alices_public_key)
+apb_64 = base64.encodestring(alic_pub_byte)
+# dict = [alices_public_key, bobs_public_key, alices_verifying_key]
+# print  str (dict)
+# t = json.dumps(dict) # '[1, 2, [3, 4]]'
+# pprint(t)
+# pprint(str(dict))
+# print(json.dumps(json.loads(text)) 
+# pprint(r)
+# pprint(json.dumps(json.loads(str({"('delegating',)": alices_public_key}))) 
+# pprint(json.dumps(json.loads(str(bobs_public_key)))
+# pprint(f'{"delegating": {alices_public_key}}')
+# pprint(f'{"receiving": {bobs_public_key}}')
+# pprint(f'{"verifying": {alices_verifying_key}}')
+# pprint(f"capsule: bob_capsule")
+shelf = shelve.open('mydata')  # open for reading and writing, creating if nec
+shelf.update({'one':1, 'two':2, 'three': {'three.1': 3.1, 'three.2': 3.2 }})
+shelf.close()
 
-cfrags = list()  # Bob's cfrag collection
-for kfrag in kfrags:
-    cfrag = pre.reencrypt(kfrag=kfrag, capsule=bob_capsule)
-    cfrags.append(cfrag)  # Bob collects a cfrag
-
-assert len(cfrags) == 10
-
-#10
-# Bob attaches cfrags to the capsule
-# ----------------------------------
-# Bob attaches at least `threshold` `cfrags` to the capsule;
-# then it can become *activated*.
-
-for cfrag in cfrags:
-    bob_capsule.attach_cfrag(cfrag)
-
-#11
-# Bob activates and opens the capsule
-# ------------------------------------
-# Finally, Bob activates and opens the capsule,
-# then decrypts the re-encrypted ciphertext.
-
-bob_cleartext = pre.decrypt(ciphertext=ciphertext, capsule=bob_capsule, decrypting_key=bobs_private_key)
-# print("bob_cleartext")
-# print(bob_cleartext)
-image = Image.open(io.BytesIO(bob_cleartext))
-image.save("python/proxy/25.jpg")
-assert bob_cleartext == plaintext
+shelf = shelve.open('mydata')
+# print shelf
+shelf.close()
