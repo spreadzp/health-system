@@ -3,6 +3,7 @@
 import random, io, json, shelve, base64
 from pprint import pprint
 from umbral import pre, keys, config, signing
+from umbral.keys import UmbralPublicKey, UmbralPrivateKey
 from PIL import Image
 
 config.set_default_curve()
@@ -117,12 +118,41 @@ bob_capsule.set_correctness_keys(delegating=alices_public_key,
 # print("kfrags:", f'{kfrags}')
 # for line in sys.stdin:
 # dict = [{'delegating': alices_public_key},{'receiving': bobs_public_key},{'verifying': alices_verifying_key}]
-alic_pub_byte = io.BytesIO(alices_public_key)
-apb_64 = base64.encodestring(alic_pub_byte)
+# pprint("===========")
+# print(alices_public_key) # UmbralPublicKey:036e2d8feb51ad5
+# print(type(alices_public_key)) # "<class 'umbral.keys.UmbralPublicKey'>"
+# alic_pub_byte = bytes(alices_public_key)
+# pprint(str(alic_pub_byte, 'utf-8' ))
+# apb_64 = base64.b64encode(alic_pub_byte)
+# k = "\x03\\:\xd1\x0e\x16\xa6\xab\xcaj\x91\xe0\x82h\xb1J\xd6\x01+\x98uz'S", '\xadj\x94\x06\x96\x9e\x8aJ*'
+
+# b"\x03\\:\xd1\x0e\x16\xa6\xab\xcaj\x91\xe0\x82h\xb1J\xd6\x01+\x98uz'S"", " b'\xadj\x94\x06\x96\x9e\x8aJ*'
+# renove_alice_key = base64.b64decode(apb_64)
+# pprint(apb_64)
+# pprint("===========renove_alice_key")
+# pprint(renove_alice_key.decode("utf-8", errors="ignore"))
+apk_hex = alices_public_key.to_bytes().hex()
+bpk_hex = bobs_public_key.to_bytes().hex()
+vpk_hex = alices_verifying_key.to_bytes().hex()
+priv_hex = alices_private_key.to_bytes().hex()
+# pprint(apk_hex)
+# pprint("===========hex")
+# text = str( apb_64, 'utf-8' )
+# pprint("===========pb_64")
+# pprint(text)
+verifying_key_fromBytes = UmbralPublicKey.from_bytes(bytes.fromhex(apk_hex))
+# print(verifying_key_fromBytes)
+pprint(priv_hex)
+pprint("?????")
+
+
 # dict = [alices_public_key, bobs_public_key, alices_verifying_key]
 # print  str (dict)
-# t = json.dumps(dict) # '[1, 2, [3, 4]]'
-# pprint(t)
+t = json.dumps({'delegating':apk_hex, "receiving":bpk_hex , "verifying":vpk_hex }) # '[1, 2, [3, 4]]'
+pprint(t)
+
+pprint("!!!!")
+#return t
 # pprint(str(dict))
 # print(json.dumps(json.loads(text)) 
 # pprint(r)
@@ -133,9 +163,36 @@ apb_64 = base64.encodestring(alic_pub_byte)
 # pprint(f'{"verifying": {alices_verifying_key}}')
 # pprint(f"capsule: bob_capsule")
 shelf = shelve.open('mydata')  # open for reading and writing, creating if nec
-shelf.update({'one':1, 'two':2, 'three': {'three.1': 3.1, 'three.2': 3.2 }})
+#shelf.update({'delegating':apk_hex})
+shelf["delegating"] = apk_hex
+shelf["privKey"] = priv_hex
 shelf.close()
 
 shelf = shelve.open('mydata')
-# print shelf
+
+pprint(shelf["delegating"])
+priv_key_fromBytesFile = UmbralPrivateKey.from_bytes(bytes.fromhex(shelf["privKey"]))
+key_fromBytesFile = UmbralPublicKey.from_bytes(bytes.fromhex(shelf["delegating"]))
+pprint(key_fromBytesFile)
+pprint(priv_key_fromBytesFile)
 shelf.close()
+
+
+my_dict = {'delegating':apk_hex}
+
+def dict_to_binary(the_dict):
+    str = json.dumps(the_dict)
+    binary = ' '.join(format(ord(letter), 'b') for letter in str)
+    return binary
+
+
+def binary_to_dict(the_binary):
+    jsn = ''.join(chr(int(x, 2)) for x in the_binary.split())
+    d = json.loads(jsn)  
+    return d
+
+# bin = dict_to_binary(alices_public_key)
+# print(bin)
+
+# dct = binary_to_dict(bin)
+# print(dct)

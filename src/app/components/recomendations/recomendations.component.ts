@@ -43,7 +43,6 @@ export class RecomendationsComponent implements OnInit {
       }
       if (flagCurve) {
         container += response[i];
-
       }
 
     }
@@ -70,10 +69,10 @@ export class RecomendationsComponent implements OnInit {
     this.electronService.ipcRenderer.send('get-keys-for-rekey', 'keysForCapsule.py');
     this.electronService.ipcRenderer.on('response-keys', (event, arg) => {
       this.resForRekey = arg;
-      const publicKeysForCapcule = this.fillKeys(this.parseResponse(this.resForRekey));
-console.dir(publicKeysForCapcule);
+      // const publicKeysForCapcule = this.fillKeys(this.parseResponse(this.resForRekey));
+    console.log(arg);
       return this.http.post<any>(
-        'https://nuserver.appspot.com/token-re-key', publicKeysForCapcule)
+        'https://nuserver.appspot.com/token-re-key', {"publicKeysForCapcule": ""})
         .subscribe((data: any) => {
           this.tokenReKey = data;
           console.log('this.tokenReKey :', this.tokenReKey);

@@ -2,30 +2,37 @@ import { app, BrowserWindow, screen, ipcMain } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 let { PythonShell } = require('python-shell');
-  const pathPyLib =  process.cwd() + '/python/proxy/';
-  console.log('normalization : ' + pathPyLib);  
-  const options = {
-   mode: 'text',
-   pythonPath: '/usr/bin/python3',
-   pythonOptions: ['-u'], // get print results in real-time
-   scriptPath: pathPyLib,
-   args: ""
- };
+const pathPyLib = process.cwd() + '/python/proxy/';
+console.log('normalization : ' + pathPyLib);
+const options = {
+  mode: 'text',
+  pythonPath: '/usr/bin/python3',
+  pythonOptions: ['-u'], // get print results in real-time
+  scriptPath: pathPyLib,
+  args: ""
+};
 let win, serve;
 const args = process.argv.slice(1);
 serve = args.some(val => val === '--serve');
 
-function callPythonFile (fileName, param, responseName, eventItem) {
+function callPythonFile(fileName, param, responseName, eventItem) {
   options.args = param;
-  PythonShell.run(fileName,options, function (err: any, results: any) {
+  PythonShell.run(fileName, options, function (err: any, results: any) {
     if (err) throw err;
     console.log('results :', results);
     eventItem.sender.send(responseName, results);
   })
+  /* PythonShell.end(function (err,code,signal) {
+    if (err) throw err;
+    console.log('The exit code was: ' + code);
+    console.log('The exit signal was: ' + signal);
+    console.log('finished');
+    console.log('finished');
+  }); */
 }
 
 function createWindow() {
-  
+
   const electronScreen = screen;
   const size = electronScreen.getPrimaryDisplay().workAreaSize;
 
@@ -41,34 +48,34 @@ function createWindow() {
   });
 
   if (serve) {
-    
-   
-      ipcMain.on('asynchronous-message', (event, arg) => {
-        console.log(arg) // prints "ping"
-        callPythonFile('rekey.py', "!!!!", 'asynchronous-reply', event);
-        // event.sender.send('asynchronous-reply', results);
-      })
 
-      ipcMain.on('get-keys-for-rekey', (event, arg) => {
-        console.log(arg) // prints "ping"
-        callPythonFile(arg, "!!!!", 'response-keys', event);
-        // event.sender.send('asynchronous-reply', results);
-      })
-      ipcMain.on('create-enc-capsule', (event, publicBobKey) => {
-        console.log(publicBobKey) // prints "ping"
-        event.sender.send('asynchronous-reply', publicBobKey);
-      }) 
+
+    ipcMain.on('asynchronous-message', (event, arg) => {
+      console.log(arg) // prints "ping"
+      callPythonFile('rekey.py', "!!!!", 'asynchronous-reply', event);
+      // event.sender.send('asynchronous-reply', results);
+    })
+
+    ipcMain.on('get-keys-for-rekey', (event, arg) => {
+      console.log(arg) // prints "ping"
+      callPythonFile(arg, "!!!!", 'response-keys', event);
+      // event.sender.send('asynchronous-reply', results);
+    })
+    ipcMain.on('create-enc-capsule', (event, publicBobKey) => {
+      console.log(publicBobKey); // prints "ping"
+      event.sender.send('asynchronous-reply', publicBobKey);
+    })
     require('electron-reload')(__dirname, {
       electron: require(`${__dirname}/node_modules/electron`)
     });
     win.loadURL('http://localhost:4200');
     win.webContents.openDevTools();
   } else {
-   /*  PythonShell.run('rekey.py',options, function (err: any, results: any) {
-      if (err) throw err;
-      console.log('hello.py finished.');
-      console.log('results', results);
-    }); */
+    /*  PythonShell.run('rekey.py',options, function (err: any, results: any) {
+       if (err) throw err;
+       console.log('hello.py finished.');
+       console.log('results', results);
+     }); */
     win.loadURL(url.format({
       pathname: path.join(__dirname, 'dist/index.html'),
       protocol: 'file:',
@@ -79,7 +86,7 @@ function createWindow() {
     console.log(arg) // prints "ping"
     event.returnValue = 'pong'
   })
-  
+
 
   /* if (serve) {
     win.webContents.openDevTools();
